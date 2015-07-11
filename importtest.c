@@ -27,6 +27,18 @@ void test_parse_record_returns_filled_user_record(CuTest *tc)
 	ur_delete(ur);
 }
 
+void test_parse_record_returns_correct_groups(CuTest *tc)
+{
+	struct userrecord *ur;
+
+	ur = ur_parse(TEST_RECORD);
+	CuAssertStrEquals(tc, "admin", ur->groups[0]);
+	CuAssertStrEquals(tc, "user", ur->groups[1]);
+	CuAssertStrEquals(tc, "facebook", ur->groups[2]);
+	CuAssertStrEquals(tc, "google", ur->groups[3]);
+	CuAssertStrEquals(tc, "", ur->groups[4]);
+	ur_delete(ur);
+}
 
 int main(void)
 {
@@ -35,6 +47,7 @@ int main(void)
 
 	SUITE_ADD_TEST(suite, test_parse_record_returns_user_record_with_valid_record);
 	SUITE_ADD_TEST(suite, test_parse_record_returns_filled_user_record);
+	SUITE_ADD_TEST(suite, test_parse_record_returns_correct_groups);
 
 	CuSuiteRun(suite);
 	CuSuiteSummary(suite, output);
