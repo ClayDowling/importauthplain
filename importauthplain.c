@@ -15,16 +15,100 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sqlite3.h>
+#include <unistd.h>
 
-#define STRING_LENGTH 80
+#include "importplain.h"
 
-struct userec {
-	char login[STRING_LENGTH];
-	char password[STRING_LENGTH];
-	char name[STRING_LENGTH];
-	char email[STRING_LENGTH];
-};
+int group_gid[MAX_GLOBAL_GROUPS];
 
-typedef struct userec user_t;
+sqlite3 *db = NULL;
 
-void read_record(FILE* src, user_t* record);
+int currate_groups(FILE*);
+
+int main(int argc, char** argv)
+{
+    FILE    *src = NULL;
+    int     ch;
+    char    *databasefile = NULL;
+    char    *srcfilename = NULL;
+    char    *animal = "";
+
+    while((ch = getopt(argc, argv, "s:d:a:")) != -1) {
+        switch(ch) {
+        case 's':
+            srcfilename = optarg;
+            break;
+        case 'd':
+            databasefile = optarg;
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (srcfilename) {
+        src = fopen(srcfilename, "r");
+        if (NULL == src) {
+            perror(srcfilename);
+            return EXIT_FAILURE;
+        }
+    } else {
+        fprintf(stderr, "-s sourcefile is mandatory.\n");
+        return EXIT_FAILURE;
+    }
+
+    if (databasefile) {
+        if (sqlite3_open(databasefile, &db) != SQLITE_OK) {
+            // sqlite3 error message
+
+            if (NULL != db) {
+                sqlite3_close(db);
+            }
+            return EXIT_FAILURE;
+        }
+    } else {
+        fprintf(stderr, "-d database file is madatory.\n");
+        return EXIT_FAILURE;
+    }
+
+    if (currate_groups(src) == 0) {
+        sqlite3_close(db);
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
+}
+
+int currate_groups(FILE* src)
+{
+    sqlite3_stmt        *stmt;
+    int                 i;
+    struct userrecord   *ur;
+    char                line[2048];
+
+    rewind(src);
+
+    if (sqlite3_prepare(db, "INSERT INTO groups (name) VALUES (?)", -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "%s", sqlite3_errmsg(db));
+        return 0;
+    }
+
+    while(!feof(src)) {
+        fgets(line, sizeof(line), src);
+        ur = ur_parse(line);
+        ur_delete(ur);
+    }
+
+    for(i=0; 0 != global_groups[i][0]; ++i) {
+        sqlite3_bind_text(stmt, 1, global_groups[i], -1, SQLITE_STATIC);
+        if (sqlite3_step(stmt) != SQLITE_OK) {
+            fprintf(stderr, "%s", sqlite3_errmsg(db));
+            sqlite3_finalize(stmt);
+            return 0;
+        }
+        group_gid[i] = sqlite3_last_insert_rowid(db);
+    }
+
+    sqlite3_finalize(stmt);
+    return 1;
+}
