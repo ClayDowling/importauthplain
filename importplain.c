@@ -58,8 +58,8 @@ void ur_delete(struct userrecord* ur)
 
 int ur_group_seen(const char *search)
 {
-    ur_initialize();
     int i;
+    ur_initialize();
     for(i=0; i < MAX_GLOBAL_GROUPS; ++i) {
         if (strncmp(global_groups[i], search, FIELD_LENGTH) == 0) {
             return 1;
@@ -70,8 +70,8 @@ int ur_group_seen(const char *search)
 
 void ur_add_global_group(const char* group)
 {
-    ur_initialize();
     int i;
+    ur_initialize();
     for(i=0; i < MAX_GLOBAL_GROUPS; ++i) {
         if (strlen(global_groups[i]) == 0) {
             break;
@@ -90,6 +90,6 @@ void ur_initialize()
     if (ur_initialized) {
         return;
     }
-    bzero(global_groups, sizeof(global_groups));
+    memset(global_groups, 0, sizeof(global_groups));
     ur_initialized = 1;
 }

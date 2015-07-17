@@ -10,7 +10,7 @@ const char *TEST_RECORD_BAD_GROUPS = "badgroups:$1$8qW4hit7$gf3SREif:User With B
 
 void setup()
 {
-    bzero(global_groups, sizeof(global_groups));
+    memset(global_groups, 0, sizeof(global_groups));
 }
 
 void test_parse_record_returns_user_record_with_valid_record(CuTest *tc)

@@ -15,7 +15,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include "sqlite3.h"
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -50,6 +52,7 @@ int main(int argc, char** argv)
     char    *srcfilename = NULL;
     char    *animal = "";
 
+#ifndef _WIN32
     while((ch = getopt(argc, argv, "s:d:a:")) != -1) {
         switch(ch) {
         case 's':
@@ -66,6 +69,20 @@ int main(int argc, char** argv)
             break;
         }
     }
+#else
+	for(ch = 1; ch < argc; ++ch) {
+		if (strcmp(argv[ch], "-s") == 0 && argv[ch + 1]) {
+			srcfilename = argv[ch + 1];
+		}
+		if (strcmp(argv[ch], "-d") == 0 && argv[ch + 1]) {
+			databasefile = argv[ch + 1];
+		}
+		if (strcmp(argv[ch], "-a") == 0 && argv[ch + 1]) {
+			animal = argv[ch + 1];
+		}
+	}
+#endif
+
 
     if (srcfilename) {
         struct stat sb;
@@ -148,7 +165,7 @@ int currate_groups(FILE* src)
 
 
 currate_groups_oops:
-    fprintf(stderr, "%s: %s", __func__, sqlite3_errmsg(db));
+    fprintf(stderr, "%s: %s", __FUNCTION__, sqlite3_errmsg(db));
     sqlite3_finalize(stmt);
     return 0;
 }
@@ -236,7 +253,7 @@ currate_users_oops:
         sqlite3_finalize(user_group_stmt);
     }
     if (result == 0) {
-        fprintf(stderr, "%s: %s\n", __func__, sqlite3_errmsg(db));
+        fprintf(stderr, "%s: %s\n", __FUNCTION__, sqlite3_errmsg(db));
     }
     return 0;
 }
