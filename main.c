@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "ImportAuthPlainConfig.h"
 #include "importplain.h"
 
 int group_gid[MAX_GLOBAL_GROUPS];
@@ -28,6 +29,18 @@ sqlite3 *db = NULL;
 int currate_groups(FILE*);
 int currate_users(FILE*, const char*);
 int get_group_gid(const char*);
+
+void help(const char *program) {
+
+    fprintf(stderr, "DokuWiki auth_plain importer for auth_sqlite version %d.%d\n\n",
+            ImportAuthPlain_VERSION_MAJOR, ImportAuthPlain_VERSION_MINOR);
+    fprintf(stderr, "usage: %s -s source -d database [-a animal]\n"
+                    "\n"
+                    "-s auth_plain users file, with comments and blank lines removed.\n"
+                    "-d database file with schema matching auth.sql\n"
+                    "-a animal to associate these users with on the farm.\n",
+            program);
+}
 
 int main(int argc, char** argv)
 {
@@ -49,6 +62,7 @@ int main(int argc, char** argv)
             animal = optarg;
             break;
         default:
+            help(argv[0]);
             break;
         }
     }
@@ -65,7 +79,8 @@ int main(int argc, char** argv)
             return EXIT_FAILURE;
         }
     } else {
-        fprintf(stderr, "-s sourcefile is mandatory.\n");
+        help(argv[0]);
+        fprintf(stderr, "\n*** -s sourcefile is mandatory.\n");
         return EXIT_FAILURE;
     }
 
@@ -78,7 +93,8 @@ int main(int argc, char** argv)
             return EXIT_FAILURE;
         }
     } else {
-        fprintf(stderr, "-d database file is madatory.\n");
+        help(argv[0]);
+        fprintf(stderr, "\n*** -d database file is madatory.\n");
         return EXIT_FAILURE;
     }
 

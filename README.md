@@ -26,20 +26,42 @@ management tools.
 If you're on OSX you'll need to install your development tools
 via the app store.  Best of luck.
 
-If you're on windows, best of luck.  I like the MinGW-w64 
-package.  Microsoft also distributes their compiler for free,
-but they use their own build system and I haven't included 
-the necessary build scripts for it.
+If you are on Windows you'll need to install a development toolkit.
+The MinGW64 tool suite is very nice.  Building with MinGW64 will be
+very similar to building for unix systems.
+
+Microsoft also distributes their own C/C++ development tools for free.
+You will need to look up the appropriate options to CMake to get a build
+created for that environment.
 
 ## Building
 
-The program is simple to build:
+The program uses cmake for build configuration.  Build order is
+something like:
 
-  make
+mkdir build
+cd build
+cmake ..
+make
+make test
 
-That will build a binary for your system.  If you don't wind up 
-with a file called "importauthplain" or "importauthplain.exe"
-something went wrong.  Fill an issue on github and include the
-output from your compiler.
+This should create an executable suitable for your system.  This
+should also work on most operating systems.
+
+## Importing Data
+
+Version 1.0 of importauthplain expects a database with a schema like the
+one described in auth.sql from the authsqlite plugin distribution.  If
+you have a different schema you will need to adjust the program as
+appropriate.
+
+From your build folder:
+
+  importauthplain -s /farm/cow/conf/users.auth.php 
+	-d /var/allusers/users.db -a cow.myfarm.org
 
 
+Please note that this is a run-once program.  If it runs into a login or
+email uniqueness constraint, it will throw up and bail out.  Future
+versions may attempt to protect you from yourself.  This one assumes you
+know what you're doing.
