@@ -26,6 +26,8 @@ int group_gid[MAX_GLOBAL_GROUPS];
 sqlite3 *db = NULL;
 
 int currate_groups(FILE*);
+int currate_users(FILE*, const char*);
+int get_group_gid(const char*);
 
 int main(int argc, char** argv)
 {
@@ -42,6 +44,9 @@ int main(int argc, char** argv)
             break;
         case 'd':
             databasefile = optarg;
+            break;
+        case 'a':
+            animal = optarg;
             break;
         default:
             break;
@@ -77,12 +82,18 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    if (currate_groups(src) == 0) {
-        sqlite3_close(db);
-        return EXIT_FAILURE;
-    }
+    if (currate_groups(src) == 0)
+        goto main_oops;
 
+    if (currate_users(src, animal) == 0)
+        goto main_oops;
+
+    sqlite3_close(db);
     return EXIT_SUCCESS;
+
+main_oops:
+    sqlite3_close(db);
+    return EXIT_FAILURE;
 }
 
 int currate_groups(FILE* src)
@@ -106,16 +117,11 @@ int currate_groups(FILE* src)
     }
 
     for(i=0; 0 != global_groups[i][0]; ++i) {
-        fprintf(stderr, "Group: %s\n", global_groups[i]);
         if (sqlite3_bind_text(stmt, 1, global_groups[i], -1, SQLITE_STATIC) != SQLITE_OK) {
-            fprintf(stderr, "sqlite_bind: %s\n", sqlite3_errmsg(db));
-            sqlite3_finalize(stmt);
-            return 0;
+            goto currate_groups_oops;
         }
         if (sqlite3_step(stmt) != SQLITE_DONE) {
-            fprintf(stderr, "sqlite step: %s\n", sqlite3_errmsg(db));
-            sqlite3_finalize(stmt);
-            return 0;
+            goto currate_groups_oops;
         }
         sqlite3_reset(stmt);
         group_gid[i] = sqlite3_last_insert_rowid(db);
@@ -123,4 +129,98 @@ int currate_groups(FILE* src)
 
     sqlite3_finalize(stmt);
     return 1;
+
+
+currate_groups_oops:
+    fprintf(stderr, "%s: %s", __func__, sqlite3_errmsg(db));
+    sqlite3_finalize(stmt);
+    return 0;
+}
+
+int get_group_gid(const char *group)
+{
+    int i;
+
+    for(i=0; i < MAX_GLOBAL_GROUPS && global_groups[i][0] != 0; ++i) {
+        if (strcmp(global_groups[i], group) == 0) {
+            return group_gid[i];
+        }
+    }
+
+    return -1;
+}
+
+
+int currate_users(FILE *src, const char *animal)
+{
+    struct userrecord   *ur;
+    sqlite3_stmt        *user_stmt = NULL;
+    sqlite3_stmt        *user_group_stmt = NULL;
+    char                line[2048];
+    int                 i;
+    int                 uid;
+    int                 gid;
+    int                 result = 0;
+
+    if (sqlite3_prepare_v2(db, "INSERT INTO user (login, pass, fullname, email) VALUES (?, ?, ?, ?)", -1, &user_stmt, NULL) != SQLITE_OK) {
+        goto currate_users_oops;
+    }
+    if (sqlite3_prepare_v2(db, "INSERT INTO usergroup (uid, gid, animal) VALUES (?, ?, ?)", -1, &user_group_stmt, NULL) != SQLITE_OK) {
+        goto currate_users_oops;
+    }
+    sqlite3_exec(db, "BEGIN", NULL, NULL, NULL);
+    rewind(src);
+
+    while(!feof(src)) {
+        fgets(line, sizeof(line), src);
+        if (feof(src)) break;
+
+        ur = ur_parse(line);
+        if (NULL == ur)
+            continue;
+
+        if (sqlite3_bind_text(user_stmt, 1, ur->login, -1, SQLITE_STATIC) != SQLITE_OK)
+            goto currate_users_oops;
+        if (sqlite3_bind_text(user_stmt, 2, ur->password, -1, SQLITE_STATIC) != SQLITE_OK)
+            goto currate_users_oops;
+        if (sqlite3_bind_text(user_stmt, 3, ur->name, -1, SQLITE_STATIC) != SQLITE_OK)
+            goto currate_users_oops;
+        if (sqlite3_bind_text(user_stmt, 4, ur->email, -1, SQLITE_STATIC) != SQLITE_OK)
+            goto currate_users_oops;
+        if (sqlite3_step(user_stmt) != SQLITE_DONE)
+            goto currate_users_oops;
+        uid = sqlite3_last_insert_rowid(db);
+        sqlite3_reset(user_stmt);
+        ur_delete(ur);
+
+        for(i=0; i < MAX_GROUPS && ur->groups[i][0] != 0; ++i) {
+            gid = get_group_gid(ur->groups[i]);
+            if (gid != -1) {
+                if (sqlite3_bind_int(user_group_stmt, 1, uid) != SQLITE_OK)
+                    goto currate_users_oops;
+                if (sqlite3_bind_int(user_group_stmt, 2, gid) != SQLITE_OK)
+                    goto currate_users_oops;
+                if (sqlite3_bind_text(user_group_stmt, 3, animal, -1, SQLITE_STATIC) != SQLITE_OK)
+                    goto currate_users_oops;
+                if (sqlite3_step(user_group_stmt) != SQLITE_DONE)
+                    goto currate_users_oops;
+                if (sqlite3_reset(user_group_stmt) != SQLITE_OK)
+                    goto currate_users_oops;
+            }
+        }
+    }
+    sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+    result = 1;
+
+currate_users_oops:
+    if (user_stmt != NULL) {
+        sqlite3_finalize(user_stmt);
+    }
+    if (user_group_stmt != NULL) {
+        sqlite3_finalize(user_group_stmt);
+    }
+    if (result == 0) {
+        fprintf(stderr, "%s: %s\n", __func__, sqlite3_errmsg(db));
+    }
+    return 0;
 }

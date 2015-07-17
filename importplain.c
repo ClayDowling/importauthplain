@@ -3,12 +3,26 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 char global_groups[MAX_GLOBAL_GROUPS][FIELD_LENGTH];
 static int ur_initialized = 0;
 
 void ur_add_global_group(const char*);
 void ur_initialize();
+
+void strip_trailing_whitespace(char *string)
+{
+    char *end;
+
+    // Trim trailing space
+    end = string + strlen(string) - 1;
+    while(end > string && isspace(*end)) end--;
+
+    // Write new null terminator
+    *(end+1) = 0;
+
+}
 
 struct userrecord* ur_parse(const char* src)
 {
@@ -24,15 +38,10 @@ struct userrecord* ur_parse(const char* src)
 	strncpy(ur->name, strtok(NULL, ":"), FIELD_LENGTH);
 	strncpy(ur->email, strtok(NULL, ":"), FIELD_LENGTH);
 	
-	while((group = strtok(NULL, ",")) && i < MAX_GROUPS) {
-                int pos;
-		strncpy(ur->groups[i], group, FIELD_LENGTH);
-                pos = strlen(group) - 1;
-                while(pos > 0 && !isspace(group[pos])) {
-                    group[pos] = 0;
-                    --pos;
-                }
-                ur_add_global_group(group);
+    while((group = strtok(NULL, ",")) && i < MAX_GROUPS) {
+        strip_trailing_whitespace(group);
+        strncpy(ur->groups[i], group, FIELD_LENGTH);
+        ur_add_global_group(group);
 		++i;
 	}
 

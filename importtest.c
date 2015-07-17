@@ -89,7 +89,7 @@ void test_parse_record_trims_whitespace_from_groups(CuTest *tc)
     struct userrecord *ur;
 
     setup();
-    ur - ur_parse(TEST_RECORD_2);
+    ur = ur_parse(TEST_RECORD_2);
     ur_delete(ur);
 
     CuAssertStrEquals(tc, "user", global_groups[0]);
@@ -116,10 +116,10 @@ int main(void)
 	SUITE_ADD_TEST(suite, test_parse_record_returns_user_record_with_valid_record);
 	SUITE_ADD_TEST(suite, test_parse_record_returns_filled_user_record);
 	SUITE_ADD_TEST(suite, test_parse_record_returns_correct_groups);
-        SUITE_ADD_TEST(suite, test_parse_record_populates_global_groups_from_one_record);
-        SUITE_ADD_TEST(suite, test_parse_record_populates_global_groups_from_two_records);
-        SUITE_ADD_TEST(suite, test_parse_record_populates_only_one_copy_of_a_group);
-        SUITE_ADD_TEST(suite, test_parse_record_trims_whitespace_from_groups);
+    SUITE_ADD_TEST(suite, test_parse_record_populates_global_groups_from_one_record);
+    SUITE_ADD_TEST(suite, test_parse_record_populates_global_groups_from_two_records);
+    SUITE_ADD_TEST(suite, test_parse_record_populates_only_one_copy_of_a_group);
+    SUITE_ADD_TEST(suite, test_parse_record_trims_whitespace_from_groups);
 
 	CuSuiteRun(suite);
 	CuSuiteSummary(suite, output);

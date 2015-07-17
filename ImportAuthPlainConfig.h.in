@@ -1,0 +1,7 @@
+#ifndef _IMPORT_AUTH_PLAIN_CONFIG_H_
+#define _IMPORT_AUTH_PLAIN_CONFIG_H_
+
+#define ImportAuthPlain_VERSION_MAJOR @ImportAuthPlain_VERSION_MAJOR@
+#define ImportAuthPlain_VERSION_MINOR @ImportAuthPlain_VERSION_MINOR@
+
+#endif
