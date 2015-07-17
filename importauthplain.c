@@ -14,8 +14,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <sqlite3.h>
+#include "sqlite3.h"
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "importplain.h"
 
@@ -47,6 +49,11 @@ int main(int argc, char** argv)
     }
 
     if (srcfilename) {
+        struct stat sb;
+        if (stat(srcfilename, &sb)) {
+            fprintf(stderr, "%s not found.\n", srcfilename);
+            return EXIT_FAILURE;
+        }
         src = fopen(srcfilename, "r");
         if (NULL == src) {
             perror(srcfilename);
@@ -59,8 +66,7 @@ int main(int argc, char** argv)
 
     if (databasefile) {
         if (sqlite3_open(databasefile, &db) != SQLITE_OK) {
-            // sqlite3 error message
-
+            fprintf(stderr, "%s", sqlite3_errmsg(db));
             if (NULL != db) {
                 sqlite3_close(db);
             }
@@ -88,8 +94,8 @@ int currate_groups(FILE* src)
 
     rewind(src);
 
-    if (sqlite3_prepare(db, "INSERT INTO groups (name) VALUES (?)", -1, &stmt, NULL) != SQLITE_OK) {
-        fprintf(stderr, "%s", sqlite3_errmsg(db));
+    if (sqlite3_prepare_v2(db, "INSERT INTO groups (name) VALUES (?)", -1, &stmt, NULL) != SQLITE_OK) {
+        fprintf(stderr, "sqlite prepare: %s\n", sqlite3_errmsg(db));
         return 0;
     }
 
@@ -100,12 +106,18 @@ int currate_groups(FILE* src)
     }
 
     for(i=0; 0 != global_groups[i][0]; ++i) {
-        sqlite3_bind_text(stmt, 1, global_groups[i], -1, SQLITE_STATIC);
-        if (sqlite3_step(stmt) != SQLITE_OK) {
-            fprintf(stderr, "%s", sqlite3_errmsg(db));
+        fprintf(stderr, "Group: %s\n", global_groups[i]);
+        if (sqlite3_bind_text(stmt, 1, global_groups[i], -1, SQLITE_STATIC) != SQLITE_OK) {
+            fprintf(stderr, "sqlite_bind: %s\n", sqlite3_errmsg(db));
             sqlite3_finalize(stmt);
             return 0;
         }
+        if (sqlite3_step(stmt) != SQLITE_DONE) {
+            fprintf(stderr, "sqlite step: %s\n", sqlite3_errmsg(db));
+            sqlite3_finalize(stmt);
+            return 0;
+        }
+        sqlite3_reset(stmt);
         group_gid[i] = sqlite3_last_insert_rowid(db);
     }
 

@@ -17,7 +17,7 @@ struct userrecord* ur_parse(const char* src)
 	char *group;
 	int i=0;
 
-	line = strdup(src);
+        line = strdup(src);
 	ur = calloc(1, sizeof(struct userrecord));
 	strncpy(ur->login, strtok(line, ":"), FIELD_LENGTH);
 	strncpy(ur->password, strtok(NULL, ":"), FIELD_LENGTH);
@@ -25,8 +25,14 @@ struct userrecord* ur_parse(const char* src)
 	strncpy(ur->email, strtok(NULL, ":"), FIELD_LENGTH);
 	
 	while((group = strtok(NULL, ",")) && i < MAX_GROUPS) {
+                int pos;
 		strncpy(ur->groups[i], group, FIELD_LENGTH);
-        ur_add_global_group(group);
+                pos = strlen(group) - 1;
+                while(pos > 0 && !isspace(group[pos])) {
+                    group[pos] = 0;
+                    --pos;
+                }
+                ur_add_global_group(group);
 		++i;
 	}
 

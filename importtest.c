@@ -5,7 +5,7 @@
 #include "importplain.h"
 
 const char *TEST_RECORD = "clay:$1$7qW3giu7$gf5SRGyb:Clay Dowling:bogus@lazarusid.com:admin,user,facebook,google";
-const char *TEST_RECORD_2 = "adelfa:$1$8qW4hit7$gf3SREif:Adelfa Dowling:fake@lazarusid.com:user,yahoo";
+const char *TEST_RECORD_2 = "adelfa:$1$8qW4hit7$gf3SREif:Adelfa Dowling:fake@lazarusid.com:user ,yahoo\n";
 const char *TEST_RECORD_BAD_GROUPS = "badgroups:$1$8qW4hit7$gf3SREif:User With Bad Groups:noteven@lazarusid.com:user,user";
 
 void setup()
@@ -84,6 +84,18 @@ void test_parse_record_populates_global_groups_from_two_records(CuTest *tc)
 
 }
 
+void test_parse_record_trims_whitespace_from_groups(CuTest *tc)
+{
+    struct userrecord *ur;
+
+    setup();
+    ur - ur_parse(TEST_RECORD_2);
+    ur_delete(ur);
+
+    CuAssertStrEquals(tc, "user", global_groups[0]);
+    CuAssertStrEquals(tc, "yahoo", global_groups[1]);
+}
+
 void test_parse_record_populates_only_one_copy_of_a_group(CuTest *tc)
 {
     struct userrecord *ur;
@@ -104,9 +116,10 @@ int main(void)
 	SUITE_ADD_TEST(suite, test_parse_record_returns_user_record_with_valid_record);
 	SUITE_ADD_TEST(suite, test_parse_record_returns_filled_user_record);
 	SUITE_ADD_TEST(suite, test_parse_record_returns_correct_groups);
-    SUITE_ADD_TEST(suite, test_parse_record_populates_global_groups_from_one_record);
-    SUITE_ADD_TEST(suite, test_parse_record_populates_global_groups_from_two_records);
-    SUITE_ADD_TEST(suite, test_parse_record_populates_only_one_copy_of_a_group);
+        SUITE_ADD_TEST(suite, test_parse_record_populates_global_groups_from_one_record);
+        SUITE_ADD_TEST(suite, test_parse_record_populates_global_groups_from_two_records);
+        SUITE_ADD_TEST(suite, test_parse_record_populates_only_one_copy_of_a_group);
+        SUITE_ADD_TEST(suite, test_parse_record_trims_whitespace_from_groups);
 
 	CuSuiteRun(suite);
 	CuSuiteSummary(suite, output);
