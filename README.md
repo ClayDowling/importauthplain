@@ -15,7 +15,7 @@ Linux or BSD you should already have it installed.
 
 The easiest way to tell is to type:
 
-  gcc --version
+    gcc --version
 
 If you get version information back, you're ready to rock and roll.  If you
 don't, try installing gcc using your system's package management tools.
@@ -33,11 +33,11 @@ solution and project files to make a build.
 The program uses cmake for build configuration.  Build order is something
 like:
 
-  mkdir build
-  cd build
-  cmake ..
-  make
-  make test
+    mkdir build
+    cd build
+    cmake ..
+    make
+    make test
 
 This should create an executable suitable for your system.  I have tested
 this on Linux, Windows and OSX.  It should work on most UNIX like systems.
@@ -50,7 +50,7 @@ a different schema you will need to adjust the program as appropriate.
 
 From your build folder:
 
-  importauthplain -s /farm/cow/conf/users.auth.php
+    importauthplain -s /farm/cow/conf/users.auth.php
 	-d /var/allusers/users.db -a cow.myfarm.org
 
 
