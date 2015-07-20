@@ -4,7 +4,7 @@ project (ImportAuthPlain)
 ENABLE_TESTING()
 
 set (ImportAuthPlain_VERSION_MAJOR 1)
-set (ImportAuthPlain_VERSION_MINOR 0)
+set (ImportAuthPlain_VERSION_MINOR 1)
 
 find_package(Threads)
 
