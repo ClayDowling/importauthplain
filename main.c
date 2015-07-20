@@ -138,7 +138,7 @@ int currate_groups(FILE* src)
 
     rewind(src);
 
-    if (sqlite3_prepare_v2(db, "INSERT INTO groups (name) VALUES (?)", -1, &stmt, NULL) != SQLITE_OK) {
+    if (sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO groups (name) VALUES (?)", -1, &stmt, NULL) != SQLITE_OK) {
         fprintf(stderr, "sqlite prepare: %s\n", sqlite3_errmsg(db));
         return 0;
     }
@@ -195,10 +195,10 @@ int currate_users(FILE *src, const char *animal)
     int                 gid;
     int                 result = 0;
 
-    if (sqlite3_prepare_v2(db, "INSERT INTO user (login, pass, fullname, email) VALUES (?, ?, ?, ?)", -1, &user_stmt, NULL) != SQLITE_OK) {
+    if (sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO user (login, pass, fullname, email) VALUES (?, ?, ?, ?)", -1, &user_stmt, NULL) != SQLITE_OK) {
         goto currate_users_oops;
     }
-    if (sqlite3_prepare_v2(db, "INSERT INTO usergroup (uid, gid, animal) VALUES (?, ?, ?)", -1, &user_group_stmt, NULL) != SQLITE_OK) {
+    if (sqlite3_prepare_v2(db, "INSERT OR REPLACE INTO usergroup (uid, gid, animal) VALUES (?, ?, ?)", -1, &user_group_stmt, NULL) != SQLITE_OK) {
         goto currate_users_oops;
     }
     sqlite3_exec(db, "BEGIN", NULL, NULL, NULL);

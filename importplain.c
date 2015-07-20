@@ -24,15 +24,37 @@ void strip_trailing_whitespace(char *string)
 
 }
 
+int ur_number_of_fields(const char *src)
+{
+    char *sep;
+    int  count = 1;
+
+    for(sep = strchr(src, ':'); sep; sep = strchr(&sep[1], ':')) {
+        ++count;
+    }
+
+    return count;
+}
+
 struct userrecord* ur_parse(const char* src)
 {
 	struct userrecord *ur;
 	char *line;
-	char *group;
+	char *group;    
 	int i=0;
+    char *comment;
 
-        line = strdup(src);
-	ur = calloc(1, sizeof(struct userrecord));
+    line = strdup(src);
+    comment = strchr(line, '#');
+    if (comment != NULL) {
+        *comment = 0;
+    }
+
+    if (ur_number_of_fields(line) != 5) {
+        return NULL;
+    }
+
+    ur = calloc(1, sizeof(struct userrecord));
 	strncpy(ur->login, strtok(line, ":"), FIELD_LENGTH);
 	strncpy(ur->password, strtok(NULL, ":"), FIELD_LENGTH);
 	strncpy(ur->name, strtok(NULL, ":"), FIELD_LENGTH);

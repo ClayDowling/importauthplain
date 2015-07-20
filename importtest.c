@@ -108,6 +108,27 @@ void test_parse_record_populates_only_one_copy_of_a_group(CuTest *tc)
     CuAssertStrEquals_Msg(tc, "Group found, should be empty.", "", global_groups[1]);
 }
 
+void test_parse_record_does_not_read_incomplete_records(CuTest *tc)
+{
+    const char *record = "login:pass:name";
+    struct userrecord *ur;
+
+    setup();
+    ur = ur_parse(record);
+    CuAssertPtrEquals(tc, NULL, ur);
+}
+
+void test_parse_record_does_no_read_past_comment_markers(CuTest *tc)
+{
+    const char *record = "login:pass:name:#email:groups";
+    struct userrecord *ur;
+
+    setup();
+
+    ur = ur_parse(record);
+    CuAssertPtrEquals(tc, NULL, ur);
+}
+
 int main(void)
 {
 	CuString *output = CuStringNew();
@@ -120,11 +141,14 @@ int main(void)
     SUITE_ADD_TEST(suite, test_parse_record_populates_global_groups_from_two_records);
     SUITE_ADD_TEST(suite, test_parse_record_populates_only_one_copy_of_a_group);
     SUITE_ADD_TEST(suite, test_parse_record_trims_whitespace_from_groups);
+    SUITE_ADD_TEST(suite, test_parse_record_does_not_read_incomplete_records);
+    SUITE_ADD_TEST(suite, test_parse_record_does_no_read_past_comment_markers);
 
 	CuSuiteRun(suite);
 	CuSuiteSummary(suite, output);
 	CuSuiteDetails(suite, output);
 	printf("%s\n", output->buffer);
 
-	return EXIT_SUCCESS;
+    return suite->failCount;
 }
+
