@@ -44,7 +44,7 @@ this on Linux, Windows and OSX.  It should work on most UNIX like systems.
 
 ## Importing Data
 
-Version 1.0 of importauthplain expects a database with a schema like the one
+Version 1.1 of importauthplain expects a database with a schema like the one
 described in auth.sql from the authsqlite plugin distribution.  If you have
 a different schema you will need to adjust the program as appropriate.
 
@@ -53,8 +53,9 @@ From your build folder:
     importauthplain -s /farm/cow/conf/users.auth.php
 	-d /var/allusers/users.db -a cow.myfarm.org
 
+In the event of a user or group name collision, importauthplain will attempt
+to overwrite existing data, assuming that newer data is more accurate.
 
-Please note that this is a run-once program.  If it runs into a login or
-email uniqueness constraint, it will throw up and bail out.  Future versions
-may attempt to protect you from yourself.  This one assumes you know what
-you're doing.
+Please note that changing the animal you are importing for will not cause
+group membership overwrites.  New group memberships for the new animal will
+be created.
